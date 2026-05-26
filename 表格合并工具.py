@@ -26,7 +26,7 @@ def main():
     st.markdown("<style>div[data-testid='stExpander'] {padding: 0.5rem;}</style>", unsafe_allow_html=True)
     st.markdown("<style>.stDivider {margin: 0.5rem 0;}</style>", unsafe_allow_html=True)
 
-    st.title("📊 成绩自动合并工具（紧凑交互版）")
+    st.title("📊 自动合并工具（紧凑交互版）")
     st.markdown("主表/附表均支持选择工作表，可视化配置匹配规则，一键合并导出")
     st.divider()
 
@@ -128,7 +128,17 @@ def main():
     # --------------------------
     # 3. 执行与结果区
     # --------------------------
-    run_btn = st.button("🚀 一键合并导出", type="primary", use_container_width=True)
+    st.subheader("🚀 3. 合并执行选项")
+    # ========== 这里是新增的【追加新人开关】 ==========
+    col_opt1, col_opt2 = st.columns([1, 2])
+    with col_opt1:
+        add_new_student = st.checkbox(
+            "✅ 允许追加附表新学生",
+            value=False,  # 默认关闭，不追加新人
+            help="开启后：附表中主表不存在的学生会被追加到最后\n关闭后：只更新匹配到的学生，不新增"
+        )
+
+    run_btn = st.button("一键合并导出", type="primary", use_container_width=True)
     st.divider()
     st.subheader("✅ 合并日志（不会覆盖）")
     log_area = st.empty()
@@ -190,14 +200,18 @@ def main():
                         merged = merged[cols]
                     df = merged
 
-                    def make_key(row):
-                        return tuple(str(row[k]).strip() if pd.notna(row[k]) else "" for k in match_keys)
-                    exist_keys = set(df.apply(make_key, axis=1))
-                    new_students = df_sub_temp[~df_sub_temp.apply(make_key, axis=1).isin(exist_keys)]
-                    if not new_students.empty:
-                        df = pd.concat([df, new_students], ignore_index=True)
+                    new_students_count = 0
+                    if add_new_student:
+                        def make_key(row):
+                            return tuple(str(row[k]).strip() if pd.notna(row[k]) else "" for k in match_keys)
+                        exist_keys = set(df.apply(make_key, axis=1))
+                        new_students = df_sub_temp[~df_sub_temp.apply(make_key, axis=1).isin(exist_keys)]
+                        new_students_count = len(new_students)
+                        if not new_students.empty:
+                            df = pd.concat([df, new_students], ignore_index=True)
 
-                    log_lines.append(f"✅ 附表{idx+1}完成 | 新增：{len(new_students)}人")
+                    # 日志显示
+                    log_lines.append(f"✅ 附表{idx+1}完成 | 追加新人：{new_students_count}人")
                     log_area.write("\n".join(log_lines))
 
             log_lines.append(f"🎉 全部合并完成！总数据：{len(df)}行 * {len(df.columns)}列")
