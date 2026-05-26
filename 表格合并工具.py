@@ -26,7 +26,7 @@ def main():
     st.markdown("<style>div[data-testid='stExpander'] {padding: 0.5rem;}</style>", unsafe_allow_html=True)
     st.markdown("<style>.stDivider {margin: 0.5rem 0;}</style>", unsafe_allow_html=True)
 
-    st.title("📊 中考成绩自动合并工具（紧凑交互版）")
+    st.title("📊 成绩自动合并工具（紧凑交互版）")
     st.markdown("主表/附表均支持选择工作表，可视化配置匹配规则，一键合并导出")
     st.divider()
 
