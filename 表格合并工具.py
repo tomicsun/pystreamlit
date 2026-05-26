@@ -26,7 +26,7 @@ def main():
     st.markdown("<style>div[data-testid='stExpander'] {padding: 0.5rem;}</style>", unsafe_allow_html=True)
     st.markdown("<style>.stDivider {margin: 0.5rem 0;}</style>", unsafe_allow_html=True)
 
-    st.title("📊 成绩自动合并工具（紧凑交互版）")
+    st.title("📊 中考成绩自动合并工具（紧凑交互版）")
     st.markdown("主表/附表均支持选择工作表，可视化配置匹配规则，一键合并导出")
     st.divider()
 
@@ -174,11 +174,20 @@ def main():
                     # 成绩字段映射改名
                     df_sub_temp.rename(columns=cols_map, inplace=True)
 
+                    col_positions = {}
                     for col in cols_map.values():
                         if col in df.columns:
+                            col_positions[col] = df.columns.get_loc(col)
                             df.drop(columns=[col], inplace=True)
 
+                    # 左连接（现在绝对不会有 _x _y）
                     merged = pd.merge(df, df_sub_temp, on=match_keys, how="left")
+                    # 【增强】把新列放回原来的位置
+                    for col, pos in col_positions.items():
+                        cols = list(merged.columns)
+                        cols.remove(col)
+                        cols.insert(pos, col)
+                        merged = merged[cols]
                     df = merged
 
                     def make_key(row):
@@ -200,7 +209,7 @@ def main():
             buffer = BytesIO()
             df.to_excel(buffer, index=False, engine="openpyxl")
             buffer.seek(0)
-            down_box.download_button("📥 下载最终成绩_merge稳定版1.xlsx", buffer,
+            down_box.download_button("📥 下载最终成绩_merge稳定版.xlsx", buffer,
                                      file_name="最终成绩_merge稳定版1.xlsx",
                                      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                      use_container_width=True)
